@@ -1,0 +1,29 @@
+{
+  "name": "mozart-electron",
+  "version": "0.1.0",
+  "description": "Mozart \u2014 local FLAC-friendly macOS music player",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.yourname.mozart",
+    "productName": "Mozart",
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.music"
+    }
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "music-metadata": "^7.14.0"
+  },
+  "devDependencies": {
+    "electron": "^26.0.0",
+    "electron-builder": "^24.6.0"
+  }
+}

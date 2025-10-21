@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob: 'unsafe-inline' 'unsafe-eval'">
+  <title>Mozart</title>
+  <style>
+    body{margin:0;font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;background:#0f1115;color:#fff}
+    header{display:flex;align-items:center;justify-content:space-between;padding:16px;background:#0b0c0f}
+    .logo{display:flex;gap:12px;align-items:center}
+    .logo .dot{width:36px;height:36px;background:#6b7; border-radius:6px;display:inline-block}
+    .search{display:flex;gap:8px}
+    .main{display:flex;height:calc(100vh - 120px)}
+    .sidebar{width:260px;background:#0d0f12;padding:12px;overflow:auto}
+    .content{flex:1;padding:16px;overflow:auto}
+    .track{display:flex;gap:12px;padding:8px;border-radius:6px;align-items:center;cursor:pointer}
+    .track:hover{background:#111214}
+    .cover{width:56px;height:56px;border-radius:6px;object-fit:cover;background:#222}
+    footer{padding:12px;background:#0b0c0f;display:flex;justify-content:space-between;align-items:center}
+    .now{display:flex;gap:12px;align-items:center}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><div class="dot"></div><h2>Mozart</h2></div>
+    <div class="search">
+      <button id="importBtn">Import Folder</button>
+      <button id="clearBtn">Clear Library</button>
+    </div>
+  </header>
+  <div class="main">
+    <aside class="sidebar">
+      <h4>Your Library</h4>
+      <div id="library"></div>
+    </aside>
+    <section class="content">
+      <h3 id="nowTitle">No track selected</h3>
+      <audio id="player" controls style="width:100%"></audio>
+    </section>
+  </div>
+  <footer>
+    <div>Mozart • Local</div>
+    <div class="now" id="nowMeta"></div>
+  </footer>
+  <script>
+    const importBtn = document.getElementById('importBtn');
+    const libraryDiv = document.getElementById('library');
+    const player = document.getElementById('player');
+    const nowTitle = document.getElementById('nowTitle');
+    const nowMeta = document.getElementById('nowMeta');
+
+    async function refreshLibrary(){
+      const lib = await window.electronAPI.getLibrary();
+      libraryDiv.innerHTML = '';
+      lib.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'track';
+        div.innerHTML = `<img class="cover" src="${t.cover ? 'file://'+t.cover : ''}" /><div><strong>${t.title}</strong><div style="opacity:.7">${t.artist}</div></div>`;
+        div.onclick = () => playTrack(t);
+        libraryDiv.appendChild(div);
+      });
+    }
+
+    async function playTrack(t){
+      nowTitle.textContent = t.title + ' — ' + t.artist;
+      nowMeta.innerHTML = '';
+      player.src = 'file://' + t.file;
+      player.play();
+    }
+
+    importBtn.onclick = async () => {
+      const res = await window.electronAPI.selectMusicFolder();
+      if (res.canceled) return;
+      const scanned = await window.electronAPI.scanFiles(res.paths);
+      await refreshLibrary();
+    };
+
+    document.getElementById('clearBtn').onclick = async () => {
+      await window.electronAPI.clearLibrary();
+      refreshLibrary();
+    };
+
+    refreshLibrary();
+  </script>
+</body>
+</html>
